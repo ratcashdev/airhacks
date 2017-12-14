@@ -19,6 +19,7 @@ public class ReactiveClientTest {
 
     @Before
     public void initClient() {
+
         ExecutorService threadPool = Executors.newFixedThreadPool(1, (runnable) -> {
             System.out.println("-- requesting thread with " + runnable);
             return new Thread(runnable, "--custom--made--");
