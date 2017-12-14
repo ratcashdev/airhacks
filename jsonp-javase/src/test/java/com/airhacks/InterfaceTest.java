@@ -4,11 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
-import javax.json.JsonPatch;
 import javax.json.JsonReader;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -36,6 +34,12 @@ public class InterfaceTest {
 				.add("role", "mascott").build();
 	}
 	
+	public JsonObject generateFalseMascotWithBadType() {
+		return Json.createObjectBuilder()
+				.add("name", "Ellington")
+				.add("role", Json.createObjectBuilder().add("prop1", "random")).build();
+	}
+	
 	public JsonObject generateWorkShopObj() {
 		return Json.createObjectBuilder()
 				.add("workshop", "Java EE 8 and Java 9")
@@ -57,49 +61,37 @@ public class InterfaceTest {
 	public void testJsonInclValues() {
 		String serviceSpecFileName = "service-mascot.json";
 		JsonObject refObject = readFile(serviceSpecFileName);
-		JsonPatch diff1 = Json.createDiff(generateGenuineMascot(), refObject);
-		assertThat(diff1.toJsonArray().size(), is(equalTo(0)));
+		JsonArray diff1 = ExtendedJsonPatchGenerator.createDiff(generateGenuineMascot(), refObject);
+		assertThat(diff1.size(), is(equalTo(0)));
 		
-		JsonPatch diff2 = Json.createDiff(generateFalseMascot(), refObject);
-		assertThat(diff2.toJsonArray().size(), is(not(equalTo(0))));
+		JsonArray diff2 = ExtendedJsonPatchGenerator.createDiff(refObject, generateFalseMascot());
+		assertThat(diff2.size(), is(not(equalTo(0))));
 	}
-	
-	
 	
 	@Test
 	public void testJsonStructureOnly() {
 		String serviceSpecFileName = "service-mascot.json";
 		JsonObject refObject = readFile(serviceSpecFileName);
 		
-		JsonPatch diff1 = Json.createDiff(generateFalseMascot(), refObject);
+		JsonArray diff1 = ExtendedJsonPatchGenerator.createDiff(generateFalseMascot(), refObject);
 		
 		// not even the structure is correct
-		assertTrue(isValueChangeOnly(diff1));
+		assertTrue(ExtendedJsonPatchGenerator.isValueChangeOnly(diff1));
+		
+		// type difference should not be considered structural identity
+		JsonArray diff2 = ExtendedJsonPatchGenerator.createDiff(refObject, generateFalseMascotWithBadType());
+		assertFalse(ExtendedJsonPatchGenerator.isValueChangeOnly(diff2));
 	}
-	
-	
 	
 	@Test
 	public void testJsonBadInterface() {
 		String serviceSpecFileName = "service-mascot.json";
 		JsonObject refObject = readFile(serviceSpecFileName);
-		JsonPatch diff1 = Json.createDiff(refObject, generateWorkShopObj());
-		assertThat(diff1.toJsonArray().size(), is(not(equalTo(0))));
+		JsonArray diff1 = ExtendedJsonPatchGenerator.createDiff(refObject, generateWorkShopObj());
+		assertThat(diff1.size(), is(not(equalTo(0))));
 		
 		// not even the structure is correct
-		assertFalse(isValueChangeOnly(diff1));
+		assertFalse(ExtendedJsonPatchGenerator.isValueChangeOnly(diff1));
 	}
-	
-	/**
-	 * must contain only replace operators, that means structure is identical
-	 * @param diff
-	 * @return true if only replace operations are contained
-	 */
-	boolean isValueChangeOnly(JsonPatch diff) {
-		JsonArray jsonArray = diff.toJsonArray();
-		int replaceOpsSize = jsonArray.stream().filter(f -> 
-				f.asJsonObject().getJsonString("op").getString().contentEquals("replace"))
-				.collect(Collectors.toList()).size();
-		return replaceOpsSize == jsonArray.size();
-	}
+
 }
