@@ -1,6 +1,7 @@
 package com.airhacks.ping.boundary;
 
-import javax.validation.constraints.Size;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 
@@ -16,8 +17,10 @@ public class PingResource {
      * ...bad request
      */
     @POST
-    public String ping(@Size(min = 2, max = 5) String input) {
-        return input;
+    public JsonObject ping(@ValidJson(key = "language", expectedValue = "java") JsonObject input) {
+        return Json.createObjectBuilder(input).
+                add("got", "it").
+                build();
     }
 
 }
