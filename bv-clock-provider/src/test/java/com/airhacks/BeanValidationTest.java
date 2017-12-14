@@ -4,11 +4,14 @@ package com.airhacks;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import javax.validation.constraints.Positive;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
@@ -51,5 +54,15 @@ public class BeanValidationTest {
         assertTrue(rightMessage);
         assertFalse(violations.isEmpty());
     }
+
+    @Test
+    public void list() {
+        List<@Positive Integer> list = new ArrayList<>();
+        list.add(-1);
+
+        Set<ConstraintViolation<List<Integer>>> constraints = this.validator.validate(list);
+        System.out.println("constraints = " + constraints);
+    }
+
 
 }
