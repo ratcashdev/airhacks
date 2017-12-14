@@ -22,7 +22,7 @@ public class SSLClientIT {
 
     private Client client;
 
-    private String host = "https://localhost:4848";
+    private String host = "https://localhost:8181";
     private WebTarget tut;
 
     @Before
